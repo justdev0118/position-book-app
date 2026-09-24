@@ -11,8 +11,8 @@ BUSINESS REQUIREMENT:
 
 ASSUMPTIONS:
     1. Any trade processing event always comes with an unique identifier
-    2. If any two events of same  trading account number, same security identifier and same id but different quantity arrives will be considered invalid.
-    3. any cancellation event that comes  for a trading account should have the same id as of the available quantity of the particular security identifier and trading account number else the cancellation event will be invalid
+    2. If two events arrive with the same id and account number, the second event will be rejected as a duplicate regardless of the security identifier or quantity.
+    3. A cancellation event must carry an id that matches an existing BUY or SELL event for the same account number. If no such event exists, the cancellation is invalid. The quantity and security identifier in a CANCEL event are meaningless and are not used to process the cancellation.
     4. Event Type should be only BUY, SELL or CANCEL any other type will be considered invalid 
     5. Security, authentication and authorisation are taken care by using an API GATEWAY
 
@@ -22,8 +22,8 @@ ACCEPTANCE CRITERIA:
 2. When a BUY event of the same trading account number and id comes with a different security identifier or quantity or same security identifier and same quantity(duplicate) should give 409 already exists
 3. If no id or no account number or no security identifier or no quantity is passed in the input the api should return 400 bad request
 4. If any other event type other than BUY, SELL or CANCEL is given the api should return 400 bad request
-5. If an CANCEL event comes for a particular id and account number and the security identifier for that account number or id does not exists then it should give 400 bad request.
-6. If an CANCEL event comes for a particular id and account number and the security identifier for that account number or id exists then the position event details should have the event detail captured but the position for that account number and id should not be displayed as the active position
+5. If a CANCEL event comes with an id and account number for which no prior BUY or SELL event exists, return 400 bad request.
+6. If a CANCEL event comes with an id and account number for which a prior BUY or SELL event exists, the cancellation event should be captured in the event history and the position for that account number and security identifier should reflect the reversal — the cancelled quantity should no longer be part of the active position.
 7. If a SELL event occurs and there is no security identifier for that account number or id then return 404 data not found
 8.If a SELL event occurs and there is no enough quantity for the security identifier for that account number or id then return 400 bad request with message saying insufficient securities to sell
 
